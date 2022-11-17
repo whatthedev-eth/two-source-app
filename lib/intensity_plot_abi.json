@@ -1,0 +1,31 @@
+[
+  {
+    "name": "intensity_plot_arr",
+    "type": "function",
+    "inputs": [
+      {
+        "name": "num_pts",
+        "type": "felt"
+      },
+      {
+        "name": "lambda",
+        "type": "felt"
+      },
+      {
+        "name": "d",
+        "type": "felt"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "intensity_fp_s_len",
+        "type": "felt"
+      },
+      {
+        "name": "intensity_fp_s",
+        "type": "felt*"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]
