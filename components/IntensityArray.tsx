@@ -303,7 +303,11 @@ export default function IntensityArrayValues() {
                                         let parsed = new BigNumber(e).dividedBy(SCALE_FP);
                                         return <Center key={index}>
                                             <Box key={index}>
-                                                {parsed.toString()}
+                                                {(index) % num_pts_number <= 0 &&
+                                                    <Text color='blue' fontSize="sm">
+                                                        Column {index / num_pts_number}
+                                                    </Text>
+                                                }                                      {parsed.toString()}
                                             </Box>
                                         </Center>
                                     }
