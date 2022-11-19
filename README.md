@@ -21,3 +21,8 @@ Only these *integer* inputs for now:
 - `num_pts` = number of points along each axis of the square grid, where 2 <= `num_pts` <= 25 (max value limited by allowed n_steps on testnet)
 - `lambda` >= 1
 - `d` >= 0
+
+
+## License
+
+This repository is licensed under the MIT license.
