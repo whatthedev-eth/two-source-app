@@ -26,23 +26,27 @@ import { BigNumber } from 'bignumber.js';
 import intensityPlotAbi from '../lib/intensity_plot_abi.json';
 import { intensityPlotAddress, plot_size, num_pts_0, lambda_0, d_0, r_lo_0, g_lo_0, b_lo_0, r_hi_0, g_hi_0, b_hi_0 } from "../lib/constant";
 import { Loader } from "./Loader";
+
+//Failed attempts to move stuff to other components, had trouble passing data
 // import { CheckInputSizes } from "./CheckInputs";
 // import SetSliders from "./Sliders";
 
 export default function IntensityArrayValues() {
-
+    // Fixed-point scale factor used in contract
     const SCALE_FP = new BigNumber(10 ** 20)
 
-    // Create function `set*` to update value of `*`; initialize values
+    // Create function `set*` to update value of `*`; initialize values of user inputs
     const [num_pts, setnum_pts] = useState<string>(num_pts_0);
     const [lambda, setlambda] = useState<string>(lambda_0);
     const [d, setd] = useState<string>(d_0);
 
+    // Set Starknet contract
     const { contract } = useContract({
         abi: intensityPlotAbi as Abi,
         address: intensityPlotAddress,
     });
 
+    // Call contract using inputs 
     const { data, loading, error } = useStarknetCall({
         contract,
         method: "intensity_plot_arr",
@@ -50,9 +54,12 @@ export default function IntensityArrayValues() {
     });
     console.log(">data:", data)
 
+    // Convert inputs from string to number
     const num_pts_number = Number(num_pts)
     const lambda_number = Number(lambda)
     const d_number = Number(d)
+
+    // Tried to get into array to pass to component
     // const InputParams = [
     //     {
     //         num_pts_number: num_pts_number,
@@ -61,6 +68,7 @@ export default function IntensityArrayValues() {
     //     },
     // ]
 
+    // Get dimensions of each cell in plot
     const columnWidth = plot_size / num_pts_number
     const rowHeight = plot_size / num_pts_number
 
@@ -86,6 +94,7 @@ export default function IntensityArrayValues() {
     const [g_hi, setg_hi] = useState<number>(g_hi_0);
     const [b_hi, setb_hi] = useState<number>(b_hi_0);
 
+    // Tried this for "Reset colors" button below
     // function resetColors() {
     //     // <SetSliders />
     //     setr_lo(r_lo_0);
@@ -97,6 +106,7 @@ export default function IntensityArrayValues() {
     //     return
     // }
 
+    // Find background color to apply to each cell in plot
     function computeBgColor(x: number, y: number) {
         if (!data) return '#FFFFFF' // All white cells when loading data from starknet
 
@@ -105,10 +115,10 @@ export default function IntensityArrayValues() {
 
         // Normalize intensity to [0,1] based on [MIN,MAX]=[0,4.0], with capping
         const MIN = 0
-        const MAX = 4 // Max intensity = (max total amplitude)^2 = (1+1)^2 
+        const MAX = 4 // Max intensity = (max total amplitude)^2 = (1+1)^2 = 4 
         let intensity_norm = intensity < MIN ? 0 : intensity > MAX ? 1 : (intensity - MIN) / (MAX - MIN)
 
-        // Interpolate linearly to find hex value for each color channel
+        // Interpolate linearly to find value for each color channel
         const r_channel = Math.trunc((r_hi - r_lo) * intensity_norm + r_lo)
         const g_channel = Math.trunc((g_hi - g_lo) * intensity_norm + g_lo)
         const b_channel = Math.trunc((b_hi - b_lo) * intensity_norm + b_lo)
@@ -119,11 +129,14 @@ export default function IntensityArrayValues() {
     }
 
     const intensityPlot = () => (
+        // Setup divs for plot
         <div style={{ display: 'flex', flexDirection: 'column' }}>
             {
+                // y-values (rows)
                 Array.from({ length: num_pts_number }).map((_, y) => ( // i is y
                     <div key={`row-${y}`} style={{ display: 'flex', flexDirection: 'row', marginBottom: '0px' }}>
                         {
+                            // x-values (columns)
                             Array.from({ length: num_pts_number }).map((_, x) => (
                                 <div key={`column-${x}`} style={{
                                     marginRight: '0px',
@@ -147,6 +160,7 @@ export default function IntensityArrayValues() {
                 spacing={4}
                 align='auto'
             >
+                {/* Inputs area */}
                 <Heading as='h2' size='lg'>
                     Input integers
                 </Heading>
@@ -176,31 +190,35 @@ export default function IntensityArrayValues() {
                 </HStack>
                 <Text fontSize='sm' textAlign='center'>(For scale: plot side length = 1000)</Text>
             </VStack>
+
+            {/* Check that inputs are within allowed range */}
             <Box p={4}>
                 {/* <CheckInputSizes InputParams={InputParams}/> */}
 
                 {/* Check input sizes */}
                 {num_pts_number < 2 &&
                     <Text color='red'>
-                        Check that your inputs are in the given allowable ranges.
+                        Check that your inputs are within given allowed ranges.
                     </Text>
                 }
                 {num_pts_number > 25 &&
                     <Text color='red'>
-                        Check that your inputs are in the given allowable ranges.
+                        Check that your inputs are within given allowed ranges.
                     </Text>
                 }
                 {lambda_number < 1 &&
                     <Text color='red'>
-                        Check that your inputs are in the given allowable ranges.
+                        Check that your inputs are within given allowed ranges.
                     </Text>
                 }
                 {d_number < 0 &&
                     <Text color='red'>
-                        Check that your inputs are in the given allowable ranges.
+                        Check that your inputs are within given allowed ranges.
                     </Text>
                 }
             </Box>
+
+            {/* Output area */}
             <VStack
                 spacing={4}
                 align='auto'
@@ -217,7 +235,10 @@ export default function IntensityArrayValues() {
                         <Tab fontSize='sm' fontWeight='bold' >Intensity Plot</Tab>
                         <Tab fontSize='sm' fontWeight='bold' >Intensity Values</Tab>
                     </TabList>
+
                     <TabPanels>
+
+                        {/* Intensity plot tab */}
                         <TabPanel>
                             <VStack spacing={4} align='auto'>
 
@@ -225,10 +246,14 @@ export default function IntensityArrayValues() {
                                 <Loader isLoading={loading} error={error} data={data}>
                                     {(data) => data[0].map}
                                 </Loader>
+
                                 <Center>
                                     {intensityPlot()}
                                 </Center>
+
                                 <Box padding={2}></Box>
+
+                                {/* Color sliders */}
                                 <Center>
                                     {/* <SetSliders /> */}
                                     <HStack spacing={12}>
@@ -288,13 +313,18 @@ export default function IntensityArrayValues() {
                                     </HStack>
 
                                 </Center>
+
+                                {/* Tried "Reset colors" button. Worked, but did not also reset sliders. */}
                                 {/* <Center>
                                     <Button size='sm' width='24' fontSize='small' onClick={resetColors}>
                                         Reset colors
                                     </Button>
                                 </Center> */}
+
                             </VStack>
                         </TabPanel>
+
+                        {/* Intensity values tab */}
                         <TabPanel>
                             {/* Shows loading circle if waiting for Starknet call */}
                             <Loader isLoading={loading} error={error} data={data}>
@@ -303,11 +333,16 @@ export default function IntensityArrayValues() {
                                         let parsed = new BigNumber(e).dividedBy(SCALE_FP);
                                         return <Center key={index}>
                                             <Box key={index}>
+                                                {/* Print column number if top of new column in plot*/}
                                                 {(index) % num_pts_number <= 0 &&
                                                     <Text color='blue' fontSize="sm">
                                                         Column {index / num_pts_number}
                                                     </Text>
-                                                }                                      {parsed.toString()}
+                                                }
+                                                {/* Print intensity value */}
+                                                <Text fontSize={16} width="60">
+                                                    {parsed.toString()}
+                                                </Text>
                                             </Box>
                                         </Center>
                                     }
